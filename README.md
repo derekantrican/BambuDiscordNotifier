@@ -6,15 +6,15 @@ Runs on a **Raspberry Pi Zero** (or any Linux machine on the same network as you
 
 ## Features
 
-- 🚀 **Print Started** — notifies when a print begins
-- 📊 **Progress Updates** — periodic progress with layer info, temps, and ETA
-- ✅ **Print Complete** — notifies when a print finishes successfully
-- ❌ **Print Failed/Cancelled** — alerts on failures
-- ⏸️ **Paused / ▶️ Resumed** — tracks pause/resume events
-- 🔴 **Printer Errors** — filament runout, general errors
-- 📷 **Pi Camera Snapshots** — attach photos to Discord notifications
-- 📹 **Live MJPEG Stream** — optional live camera feed viewable in any browser
-- 🎨 **Rich Discord Embeds** — color-coded with progress bars and printer stats
+- **Print Started** — notifies when a print begins
+- **Progress Updates** — periodic progress with layer info, temps, and ETA
+- **Print Complete** — notifies when a print finishes successfully
+- **Print Failed/Cancelled** — alerts on failures
+- **Paused / Resumed** — tracks pause/resume events
+- **Printer Errors** — filament runout, general errors
+- **Pi Camera Snapshots** — attach photos to Discord notifications
+- **Live MJPEG Stream** — optional live camera feed viewable in any browser
+- **Rich Discord Embeds** — color-coded with progress bars and printer stats
 
 ## Prerequisites
 
