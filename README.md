@@ -45,7 +45,7 @@ You'll need three things from your Bambu Lab printer:
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/BambuDiscordNotifier.git
+git clone https://github.com/derekantrican/BambuDiscordNotifier.git
 cd BambuDiscordNotifier
 
 # Run the setup script — it will prompt for your config
