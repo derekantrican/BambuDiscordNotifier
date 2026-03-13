@@ -1,6 +1,7 @@
 """Discord webhook notifier — sends rich embed notifications."""
 
 import io
+import json
 import time
 import logging
 import threading
@@ -166,16 +167,17 @@ class DiscordNotifier:
         for attempt in range(self.MaxRetries):
             try:
                 if snapshot:
-                    # Multipart: JSON payload + image file
+                    # Reference the uploaded file in the embed image
                     embed["image"] = {"url": "attachment://snapshot.jpg"}
-                    files = {
-                        "file": ("snapshot.jpg", io.BytesIO(snapshot), "image/jpeg"),
-                    }
-                    import json as _json
+                    # Discord requires an attachments array mapping file index to metadata
+                    payload["attachments"] = [{"id": 0, "filename": "snapshot.jpg"}]
                     resp = requests.post(
                         self.WebhookUrl,
-                        data={"payload_json": _json.dumps(payload)},
-                        files=files,
+                        data={"payload_json": json.dumps(payload)},
+                        files={
+                            # Discord expects the multipart field name to be "files[n]"
+                            "files[0]": ("snapshot.jpg", io.BytesIO(snapshot), "image/jpeg"),
+                        },
                         timeout=30,
                     )
                 else:
