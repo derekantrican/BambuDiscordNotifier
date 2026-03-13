@@ -1,0 +1,36 @@
+# Bambu Lab printer configuration
+printer:
+  name: "My Bambu Lab Printer"      # Display name in Discord notifications
+  ip: "192.168.1.100"                # Printer IP address on your local network
+  access_code: "12345678"            # LAN access code (found in printer settings)
+  serial_number: "01P00A000000"      # Printer serial number
+  port: 8883                         # MQTT port (default 8883, don't change unless needed)
+
+# Discord webhook configuration
+discord:
+  webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+  mention_role_id: null              # Optional: Discord role ID to @mention on failures (e.g. "123456789")
+  events:
+    started: true                    # Notify when a print starts
+    progress: true                   # Notify on print progress
+    progress_interval: 25            # Send progress every N% (25 = at 25%, 50%, 75%)
+    done: true                       # Notify when a print completes
+    failed: true                     # Notify when a print fails/is cancelled
+    paused: true                     # Notify when a print is paused
+    resumed: true                    # Notify when a print is resumed
+    error: true                      # Notify on printer errors
+
+# Pi Camera configuration
+camera:
+  enabled: true                      # Set to false if you don't have a Pi Camera
+  method: "libcamera"                # "picamera2" or "libcamera" (libcamera uses subprocess)
+  resolution: [1280, 720]            # Capture resolution [width, height]
+  include_on_events:                 # Which events include a camera snapshot
+    - done
+    - failed
+    - progress
+
+# Logging configuration
+logging:
+  level: "INFO"                      # DEBUG, INFO, WARNING, ERROR
+  file: null                         # Optional: path to log file (e.g. "/var/log/bambu-discord.log")
