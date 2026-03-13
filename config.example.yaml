@@ -25,6 +25,9 @@ camera:
   enabled: true                      # Set to false if you don't have a Pi Camera
   method: "libcamera"                # "picamera2" or "libcamera" (libcamera uses subprocess)
   resolution: [1280, 720]            # Capture resolution [width, height]
+  rotation: 0                        # Rotate image: 0, 90, 180, or 270 degrees
+  flip_horizontal: false             # Mirror the image horizontally
+  flip_vertical: false               # Mirror the image vertically
   include_on_events:                 # Which events include a camera snapshot
     - done
     - failed

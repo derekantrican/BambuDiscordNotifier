@@ -24,10 +24,16 @@ class PiCamCapture:
         logger: logging.Logger,
         method: str = "libcamera",
         resolution: Optional[List[int]] = None,
+        rotation: int = 0,
+        flip_horizontal: bool = False,
+        flip_vertical: bool = False,
     ) -> None:
         self.Logger = logger
         self.Method = method
         self.Resolution = resolution or [1280, 720]
+        self.Rotation = rotation  # 0, 90, 180, 270
+        self.FlipHorizontal = flip_horizontal
+        self.FlipVertical = flip_vertical
         self._picam2 = None
         self._available: Optional[bool] = None
 
@@ -67,6 +73,7 @@ class PiCamCapture:
         buf = io.BytesIO()
         self._picam2.capture_file(buf, format="jpeg")
         data = buf.getvalue()
+        data = self._apply_transforms(data)
         return self._resize_if_needed(data)
 
     def _capture_libcamera(self) -> Optional[bytes]:
@@ -95,7 +102,8 @@ class PiCamCapture:
                 return None
 
             self._available = True
-            return self._resize_if_needed(result.stdout)
+            data = self._apply_transforms(result.stdout)
+            return self._resize_if_needed(data)
 
         except FileNotFoundError:
             if self._available is not False:
@@ -105,6 +113,27 @@ class PiCamCapture:
         except subprocess.TimeoutExpired:
             self.Logger.warning("libcamera-still timed out.")
             return None
+
+    def _apply_transforms(self, data: bytes) -> bytes:
+        """Apply rotation and flip transforms if configured."""
+        if not HAS_PIL:
+            if self.Rotation or self.FlipHorizontal or self.FlipVertical:
+                self.Logger.warning("Pillow not installed — cannot apply rotation/flip transforms.")
+            return data
+        if not self.Rotation and not self.FlipHorizontal and not self.FlipVertical:
+            return data
+
+        img = Image.open(io.BytesIO(data))
+        if self.FlipHorizontal:
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        if self.FlipVertical:
+            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        if self.Rotation:
+            # PIL rotates counter-clockwise, so negate for clockwise
+            img = img.rotate(-self.Rotation, expand=True)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=85)
+        return buf.getvalue()
 
     def _resize_if_needed(self, data: bytes, max_bytes: int = 2 * 1024 * 1024) -> bytes:
         """Ensure the image is under max_bytes. Resize if needed."""

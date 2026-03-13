@@ -40,6 +40,9 @@ class BambuDiscordApp:
                 logger=logger,
                 method=config.camera.method,
                 resolution=config.camera.resolution,
+                rotation=config.camera.rotation,
+                flip_horizontal=config.camera.flip_horizontal,
+                flip_vertical=config.camera.flip_vertical,
             )
 
         # Discord notifier

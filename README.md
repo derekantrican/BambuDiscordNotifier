@@ -108,6 +108,9 @@ camera:
   enabled: true
   method: "libcamera"                # or "picamera2"
   resolution: [1280, 720]
+  rotation: 0                        # 0, 90, 180, or 270 degrees clockwise
+  flip_horizontal: false
+  flip_vertical: false
   include_on_events: [done, failed, progress]
 
 logging:
@@ -126,6 +129,9 @@ logging:
 | `discord.mention_role_id` | Optional Discord role ID to @mention on errors/failures |
 | `discord.events.progress_interval` | Send progress every N% (default 25 = at 25%, 50%, 75%) |
 | `camera.method` | `"libcamera"` uses subprocess, `"picamera2"` uses Python library |
+| `camera.rotation` | Rotate image clockwise: `0`, `90`, `180`, or `270` degrees |
+| `camera.flip_horizontal` | Mirror the image left-to-right (`true`/`false`) |
+| `camera.flip_vertical` | Mirror the image top-to-bottom (`true`/`false`) |
 | `camera.include_on_events` | Which events include a camera snapshot |
 
 ## Service Management

@@ -41,6 +41,9 @@ class CameraConfig:
     enabled: bool = True
     method: str = "libcamera"  # "picamera2" or "libcamera"
     resolution: List[int] = field(default_factory=lambda: [1280, 720])
+    rotation: int = 0  # 0, 90, 180, 270
+    flip_horizontal: bool = False
+    flip_vertical: bool = False
     include_on_events: List[str] = field(default_factory=lambda: ["done", "failed", "progress"])
 
 
@@ -105,6 +108,9 @@ def load_config(path: str) -> AppConfig:
         enabled=c.get("enabled", config.camera.enabled),
         method=c.get("method", config.camera.method),
         resolution=c.get("resolution", config.camera.resolution),
+        rotation=int(c.get("rotation", config.camera.rotation)),
+        flip_horizontal=c.get("flip_horizontal", config.camera.flip_horizontal),
+        flip_vertical=c.get("flip_vertical", config.camera.flip_vertical),
         include_on_events=c.get("include_on_events", config.camera.include_on_events),
     )
 
