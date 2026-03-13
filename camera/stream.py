@@ -26,16 +26,25 @@ class _StreamHandler(BaseHTTPRequestHandler):
     logger: Optional[logging.Logger] = None
 
     def do_GET(self) -> None:
+        try:
+            if self.logger:
+                self.logger.info("Stream server request: %s from %s", self.path, self.client_address[0])
+            if self.path == "/stream":
+                self._handle_stream()
+            elif self.path == "/snapshot":
+                self._handle_snapshot()
+            elif self.path == "/":
+                self._handle_index()
+            else:
+                self.send_error(404)
+        except Exception as e:
+            if self.logger:
+                self.logger.error("Stream handler error: %s", e, exc_info=True)
+
+    def log_request(self, code: object = "-", size: object = "-") -> None:
+        """Log all requests at INFO level so they're visible."""
         if self.logger:
-            self.logger.info("Stream server request: %s from %s", self.path, self.client_address[0])
-        if self.path == "/stream":
-            self._handle_stream()
-        elif self.path == "/snapshot":
-            self._handle_snapshot()
-        elif self.path == "/":
-            self._handle_index()
-        else:
-            self.send_error(404)
+            self.logger.info("Stream server: %s %s %s", self.requestline, code, size)
 
     def _handle_index(self) -> None:
         """Simple HTML page embedding the stream."""
@@ -104,9 +113,9 @@ class _StreamHandler(BaseHTTPRequestHandler):
             pass  # Client disconnected
 
     def log_message(self, format: str, *args) -> None:
-        """Suppress default stderr logging; use our logger instead."""
+        """Route all handler messages (including errors) through our logger."""
         if self.logger:
-            self.logger.debug("Stream server: %s", format % args)
+            self.logger.info("Stream server: %s", format % args)
 
 
 class MjpegStreamServer:
