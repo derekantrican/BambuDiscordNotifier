@@ -12,13 +12,32 @@ import time
 import logging
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from typing import Optional
 
 from .picam import PiCamCapture
 
 
+class _NoLookupHTTPServer(ThreadingMixIn, HTTPServer):
+    """HTTPServer that skips reverse DNS lookups and handles requests in threads."""
+    # Disable reverse DNS lookups on connecting clients — these cause
+    # multi-second timeouts when clients connect from LAN IPs.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_request(self):
+        """Override to set a timeout so stuck connections don't block."""
+        request, client_address = super().get_request()
+        request.settimeout(30)
+        return request, client_address
+
+
 class _StreamHandler(BaseHTTPRequestHandler):
     """HTTP handler serving MJPEG stream and single snapshots."""
+
+    # Disable the reverse DNS lookup that causes remote connections to hang
+    def address_string(self) -> str:
+        return self.client_address[0]
 
     # Set by MjpegStreamServer before the server starts
     camera: Optional[PiCamCapture] = None
@@ -145,7 +164,7 @@ class MjpegStreamServer:
         _StreamHandler.logger = self.Logger
 
         try:
-            self._server = HTTPServer((self.Host, self.Port), _StreamHandler)
+            self._server = _NoLookupHTTPServer((self.Host, self.Port), _StreamHandler)
         except OSError as e:
             self.Logger.error("Failed to start MJPEG stream server on port %d: %s", self.Port, e)
             return
