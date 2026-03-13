@@ -13,6 +13,7 @@ Runs on a **Raspberry Pi Zero** (or any Linux machine on the same network as you
 - ⏸️ **Paused / ▶️ Resumed** — tracks pause/resume events
 - 🔴 **Printer Errors** — filament runout, general errors
 - 📷 **Pi Camera Snapshots** — attach photos to Discord notifications
+- 📹 **Live MJPEG Stream** — optional live camera feed viewable in any browser
 - 🎨 **Rich Discord Embeds** — color-coded with progress bars and printer stats
 
 ## Prerequisites
@@ -112,6 +113,9 @@ camera:
   flip_horizontal: false
   flip_vertical: false
   include_on_events: [done, failed, progress]
+  stream_enabled: false              # set true to enable live MJPEG stream
+  stream_port: 8080
+  stream_fps: 2.0
 
 logging:
   level: "INFO"
@@ -133,6 +137,32 @@ logging:
 | `camera.flip_horizontal` | Mirror the image left-to-right (`true`/`false`) |
 | `camera.flip_vertical` | Mirror the image top-to-bottom (`true`/`false`) |
 | `camera.include_on_events` | Which events include a camera snapshot |
+| `camera.stream_enabled` | Enable a live MJPEG stream over HTTP (`true`/`false`) |
+| `camera.stream_port` | Port for the MJPEG stream (default `8080`) |
+| `camera.stream_fps` | Target frames per second for the stream (default `2.0`) |
+
+## Live Camera Stream
+
+If your Bambu printer's built-in camera is too slow, you can use the Pi Camera as a live video feed. Enable it in `config.yaml`:
+
+```yaml
+camera:
+  stream_enabled: true
+  stream_port: 8080     # any available port
+  stream_fps: 2.0       # keep low on Pi Zero (1-3 fps recommended)
+```
+
+Once running, the stream is available at:
+
+| URL | Description |
+|-----|-------------|
+| `http://<pi-ip>:8080/` | Simple HTML page with embedded stream |
+| `http://<pi-ip>:8080/stream` | Raw MJPEG stream (for embedding in other tools) |
+| `http://<pi-ip>:8080/snapshot` | Single JPEG snapshot |
+
+The stream applies the same `rotation`, `flip_horizontal`, and `flip_vertical` settings as Discord snapshots.
+
+> **Pi Zero note:** 2 fps is a good target. Higher values will use more CPU. The stream only runs while the service is running.
 
 ## Service Management
 

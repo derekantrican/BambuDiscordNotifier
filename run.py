@@ -23,6 +23,7 @@ from notifier.events import (
     PrintPaused, PrintResumed, PrintError, FilamentChange,
 )
 from camera.picam import PiCamCapture
+from camera.stream import MjpegStreamServer
 
 
 class BambuDiscordApp:
@@ -35,6 +36,7 @@ class BambuDiscordApp:
 
         # Camera (may be None if disabled)
         self.Camera: Optional[PiCamCapture] = None
+        self.StreamServer: Optional[MjpegStreamServer] = None
         if config.camera.enabled:
             self.Camera = PiCamCapture(
                 logger=logger,
@@ -44,6 +46,13 @@ class BambuDiscordApp:
                 flip_horizontal=config.camera.flip_horizontal,
                 flip_vertical=config.camera.flip_vertical,
             )
+            if config.camera.stream_enabled:
+                self.StreamServer = MjpegStreamServer(
+                    logger=logger,
+                    camera=self.Camera,
+                    port=config.camera.stream_port,
+                    fps=config.camera.stream_fps,
+                )
 
         # Discord notifier
         self.Discord = DiscordNotifier(
@@ -88,6 +97,10 @@ class BambuDiscordApp:
 
         self.Client.start()
 
+        # Start MJPEG stream server if enabled
+        if self.StreamServer:
+            self.StreamServer.start()
+
         # Block until SIGINT/SIGTERM
         stop_event = self.Client._stop_event
         try:
@@ -103,6 +116,8 @@ class BambuDiscordApp:
             return
         self._shutdown = True
         self.Logger.info("Shutting down ...")
+        if self.StreamServer:
+            self.StreamServer.stop()
         self.Client.stop()
         if self.Camera:
             self.Camera.close()

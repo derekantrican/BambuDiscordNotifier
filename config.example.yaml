@@ -32,6 +32,9 @@ camera:
     - done
     - failed
     - progress
+  stream_enabled: false              # Enable live MJPEG stream over HTTP
+  stream_port: 8080                  # Port for the stream (http://<pi-ip>:8080/stream)
+  stream_fps: 2.0                    # Target frames per second (keep low for Pi Zero)
 
 # Logging configuration
 logging:

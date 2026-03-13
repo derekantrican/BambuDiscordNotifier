@@ -45,6 +45,9 @@ class CameraConfig:
     flip_horizontal: bool = False
     flip_vertical: bool = False
     include_on_events: List[str] = field(default_factory=lambda: ["done", "failed", "progress"])
+    stream_enabled: bool = False
+    stream_port: int = 8080
+    stream_fps: float = 2.0
 
 
 @dataclass
@@ -112,6 +115,9 @@ def load_config(path: str) -> AppConfig:
         flip_horizontal=c.get("flip_horizontal", config.camera.flip_horizontal),
         flip_vertical=c.get("flip_vertical", config.camera.flip_vertical),
         include_on_events=c.get("include_on_events", config.camera.include_on_events),
+        stream_enabled=c.get("stream_enabled", config.camera.stream_enabled),
+        stream_port=int(c.get("stream_port", config.camera.stream_port)),
+        stream_fps=float(c.get("stream_fps", config.camera.stream_fps)),
     )
 
     # Logging settings
