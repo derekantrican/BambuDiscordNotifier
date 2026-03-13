@@ -36,6 +36,7 @@ class PiCamCapture:
         self.FlipVertical = flip_vertical
         self._picam2 = None
         self._available: Optional[bool] = None
+        self._libcamera_cmd: Optional[str] = None  # resolved on first capture
 
         if method == "picamera2":
             self._init_picamera2()
@@ -76,12 +77,30 @@ class PiCamCapture:
         data = self._apply_transforms(data)
         return self._resize_if_needed(data)
 
+    def _resolve_libcamera_cmd(self) -> Optional[str]:
+        """Find the correct libcamera/rpicam binary name."""
+        import shutil
+        for cmd in ("rpicam-still", "libcamera-still"):
+            if shutil.which(cmd):
+                self.Logger.info("Using camera command: %s", cmd)
+                return cmd
+        return None
+
     def _capture_libcamera(self) -> Optional[bytes]:
-        """Capture using libcamera-still subprocess."""
+        """Capture using rpicam-still or libcamera-still subprocess."""
+        # Resolve the binary name once
+        if self._libcamera_cmd is None:
+            self._libcamera_cmd = self._resolve_libcamera_cmd()
+            if self._libcamera_cmd is None:
+                if self._available is not False:
+                    self.Logger.warning("Neither rpicam-still nor libcamera-still found. Camera snapshots disabled.")
+                    self._available = False
+                return None
+
         try:
             result = subprocess.run(
                 [
-                    "libcamera-still",
+                    self._libcamera_cmd,
                     "-o", "-",          # output to stdout
                     "--width", str(self.Resolution[0]),
                     "--height", str(self.Resolution[1]),
@@ -95,9 +114,8 @@ class PiCamCapture:
             )
             if result.returncode != 0:
                 stderr = result.stderr.decode("utf-8", errors="replace")
-                # Only log first failure
                 if self._available is not False:
-                    self.Logger.warning("libcamera-still failed: %s", stderr[:200])
+                    self.Logger.warning("%s failed: %s", self._libcamera_cmd, stderr[:200])
                     self._available = False
                 return None
 
@@ -107,11 +125,12 @@ class PiCamCapture:
 
         except FileNotFoundError:
             if self._available is not False:
-                self.Logger.warning("libcamera-still not found. Camera snapshots disabled.")
+                self.Logger.warning("%s not found. Camera snapshots disabled.", self._libcamera_cmd)
                 self._available = False
+                self._libcamera_cmd = None  # re-resolve next time
             return None
         except subprocess.TimeoutExpired:
-            self.Logger.warning("libcamera-still timed out.")
+            self.Logger.warning("%s timed out.", self._libcamera_cmd)
             return None
 
     def _apply_transforms(self, data: bytes) -> bytes:
