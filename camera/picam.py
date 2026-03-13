@@ -114,9 +114,11 @@ class PiCamCapture:
             )
             if result.returncode != 0:
                 stderr = result.stderr.decode("utf-8", errors="replace")
-                if self._available is not False:
-                    self.Logger.warning("%s failed: %s", self._libcamera_cmd, stderr[:200])
-                    self._available = False
+                self.Logger.warning("%s exited with code %d: %s", self._libcamera_cmd, result.returncode, stderr[:300])
+                return None
+
+            if len(result.stdout) == 0:
+                self.Logger.warning("%s returned empty output", self._libcamera_cmd)
                 return None
 
             self._available = True

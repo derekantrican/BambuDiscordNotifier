@@ -26,6 +26,8 @@ class _StreamHandler(BaseHTTPRequestHandler):
     logger: Optional[logging.Logger] = None
 
     def do_GET(self) -> None:
+        if self.logger:
+            self.logger.info("Stream server request: %s from %s", self.path, self.client_address[0])
         if self.path == "/stream":
             self._handle_stream()
         elif self.path == "/snapshot":
@@ -51,11 +53,17 @@ class _StreamHandler(BaseHTTPRequestHandler):
     def _handle_snapshot(self) -> None:
         """Serve a single JPEG frame."""
         if self.camera is None:
-            self.send_error(503, "Camera not available")
+            self.send_response(503)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Camera not available")
             return
         frame = self.camera.get_snapshot()
         if frame is None:
-            self.send_error(503, "Failed to capture snapshot")
+            self.send_response(503)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Failed to capture snapshot")
             return
         self.send_response(200)
         self.send_header("Content-Type", "image/jpeg")
@@ -127,7 +135,11 @@ class MjpegStreamServer:
         _StreamHandler.frame_interval = 1.0 / max(self.Fps, 0.1)
         _StreamHandler.logger = self.Logger
 
-        self._server = HTTPServer((self.Host, self.Port), _StreamHandler)
+        try:
+            self._server = HTTPServer((self.Host, self.Port), _StreamHandler)
+        except OSError as e:
+            self.Logger.error("Failed to start MJPEG stream server on port %d: %s", self.Port, e)
+            return
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
         self._thread.start()
         self.Logger.info(
